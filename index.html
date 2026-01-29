@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <title>Приключения с животните</title>
+    <style>
+        body { 
+            margin: 0; font-family: 'Segoe UI', sans-serif; 
+            background: #2d5a27 url('forest-bg.png') no-repeat center/cover fixed; 
+            height: 100vh; display: flex; flex-direction: column; overflow: hidden; 
+        }
+        header { background: rgba(255, 255, 255, 0.9); padding: 10px; text-align: center; font-weight: 900; font-size: 1.5rem; }
+
+        /* Начален екран */
+        #start-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #2d5a27 url('forest-bg.png') no-repeat center/cover fixed;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 2000; text-align: center;
+        }
+        .info-box {
+            background: rgba(255, 255, 255, 0.95); padding: 60px; border-radius: 30px;
+            border: 6px solid #f1c40f; max-width:900px; box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+        }
+        .info-box h1 { color: #1a3317; font-size: 2.8rem; margin-top: 0; text-transform: uppercase; }
+        .info-box ul { text-align: left; font-size: 1.2rem; color: #333; line-height: 1.6; margin-bottom: 25px; }
+        .author { font-size: 0.9rem; color: rgba(255,255,255,0.8); margin-top: 25px; font-style: italic; font-weight: bold; }
+
+        /* Игрална мрежа */
+        .game-grid { 
+            display: grid; grid-template-columns: 160px 1fr 160px; 
+            gap: 15px; padding: 10px 20px; flex-grow: 1; align-items: center;
+        }
+        .side-panel { display: flex; flex-direction: column; gap: 15px; justify-content: center; }
+
+        .card-container { display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        #content-area { width: 450px; height: 380px; display: flex; align-items: center; justify-content: center; position: relative; }
+
+        .btn-img {
+            cursor: pointer; background: white; border: 2px solid #ddd; border-radius: 15px; 
+            transition: 0.1s; width: 110px; height: 110px; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 6px 0 #bdc3c7, 0 8px 15px rgba(0,0,0,0.2);
+            overflow: hidden; 
+        }
+        .btn-img:active { transform: translateY(4px); box-shadow: 0 2px 0 #bdc3c7; }
+        .btn-img img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .correct { border: 5px solid #2ecc71 !important; box-shadow: 0 0 25px #2ecc71 !important; pointer-events: none; }
+        .error { animation: shake 0.4s; border: 5px solid #e74c3c !important; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-12px); } 75% { transform: translateX(12px); } }
+
+        .back-task { 
+            text-align: center; font-weight: 900; color: white; 
+            text-shadow: 3px 3px 8px rgba(0,0,0,0.9);
+            display: flex; flex-direction: column; justify-content: center; height: 100%;
+            padding-top: 40px; 
+        }
+
+        #win-screen {
+            position: absolute; width: 720px; height: 450px; background: white;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            border-radius: 30px; border: 8px solid #f1c40f;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8); z-index: 1000;
+            top: 50%; left: 50%; transform: translate(-50%, -45%); 
+        }
+
+        .bottom-panel { display: flex; justify-content: center; gap: 10px; padding: 15px 10px 30px 10px; flex-wrap: nowrap; }
+        .bottom-panel .btn-img { width: 105px; height: 105px; }
+
+        .ready-btn { padding: 15px 40px; font-size: 1.6rem; background: #27ae60; color: white; border: none; border-radius: 40px; cursor: pointer; font-weight: 900; box-shadow: 0 5px 0 #1e8449; }
+        
+        .dot { width: 22px; height: 22px; border-radius: 50%; background: rgba(255,255,255,0.3); border: 2px solid white; margin: 0 8px; }
+        .dot.active { background: #2ecc71; box-shadow: 0 0 15px #2ecc71; }
+    </style>
+</head>
+<body>
+
+<div id="start-screen">
+    <div class="info-box">
+        <h1>Приключения с животните</h1>
+        <ul>
+            <li>Разпознай къде живее животното (диво или домашно).</li>
+            <li>Избери с какво се храни любимият ти герой.</li>
+            <li>Посочи каква е неговата полза за хората.</li>
+            <li>След като събереш всички точки, изпълни физическата задача!</li>
+        </ul>
+        <button class="ready-btn" style="background:#f1c40f; color:#000; box-shadow: 0 5px 0 #d4ac0d;" 
+                onclick="document.getElementById('start-screen').style.display='none'">ЗАПОЧНИ ИГРАТА</button>
+    </div>
+    <div class="author">Автор: Дочка Кючукова</div>
+</div>
+
+<header>ПОЗНАЙ И ИЗПЪЛНИ</header>
+
+<div class="game-grid">
+    <div class="side-panel">
+        <button class="btn-img" onclick="checkChoice(this, 'habitat', 'диво')"><img src="wild.png"></button>
+        <button class="btn-img" onclick="checkChoice(this, 'habitat', 'домашно')"><img src="home.png"></button>
+    </div>
+
+    <div class="card-container">
+        <div id="content-area">
+            <div id="animal-display"></div>
+            <div id="win-screen">
+                <img src="trophy.png" style="width: 140px; margin-bottom: 10px;">
+                <h2 style="color: #1a3317; margin: 0; font-size: 3rem; font-weight: 900;">БРАВО!</h2>
+                <p style="font-size: 1.4rem; color: #444; margin: 10px 0 20px 0;">
+                    Ти се справи отлично!<br>
+                    <span style="font-weight: bold; color: #e74c3c;">Грешни опити: <span id="error-count">0</span></span>
+                </p>
+                <button class="ready-btn" style="background:#f1c40f; color:#000; box-shadow: 0 5px 0 #d4ac0d; font-size: 1.4rem;" onclick="nextAnimal()">СЛЕДВАЩ УЧАСТНИК</button>
+            </div>
+        </div>
+        <div style="display: flex; margin-top: 15px;" id="dots"></div>
+    </div>
+
+    <div class="side-panel">
+        <button class="btn-img" onclick="checkChoice(this, 'food', 'grass.png')"><img src="grass.png"></button>
+        <button class="btn-img" onclick="checkChoice(this, 'food', 'grain.png')"><img src="grain.png"></button>
+        <button class="btn-img" onclick="checkChoice(this, 'food', 'meat.png')"><img src="meat.png"></button>
+        <button class="btn-img" onclick="checkChoice(this, 'food', 'mix.png')"><img src="mix.png"></button>
+    </div>
+</div>
+
+<div class="bottom-panel">
+    <button class="btn-img" onclick="checkChoice(this, 'benefit', 'milk.png')"><img src="milk.png"></button>
+    <button class="btn-img" onclick="checkChoice(this, 'benefit', 'eggs.png')"><img src="eggs.png"></button>
+    <button class="btn-img" onclick="checkChoice(this, 'benefit', 'honey.png')"><img src="honey.png"></button>
+    <button class="btn-img" onclick="checkChoice(this, 'benefit', 'wool.png')"><img src="wool.png"></button>
+    <button class="btn-img" onclick="checkChoice(this, 'benefit', 'guard.png')"><img src="guard.png"></button>
+    <button class="btn-img" onclick="checkChoice(this, 'benefit', 'geim.png')"><img src="geim.png"></button>
+    <button class="btn-img" onclick="checkChoice(this, 'benefit', 'ride.png')"><img src="ride.png"></button>
+</div>
+
+<audio id="s-correct" src="https://www.soundjay.com/buttons/sounds/button-37a.mp3"></audio>
+<audio id="s-error" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
+
+<script>
+const animals = [
+    { img: "hen.png", habitat: "домашно", food: ["grain.png"], benefit: ["eggs.png", "ride.png"], act: "Размахай лакти като криле", reps: "8" },
+    { img: "sheep.png", habitat: "домашно", food: ["grass.png"], benefit: ["milk.png", "wool.png", "ride.png"], act: "Балансирай на един крак", reps: "6" },
+    { img: "cow.png", habitat: "домашно", food: ["grass.png"], benefit: ["milk.png", "ride.png"], act: "Бавни наклони на главата", reps: "5" },
+    { img: "goat.png", habitat: "домашно", food: ["grass.png"], benefit: ["milk.png", "wool.png", "ride.png"], act: "Странични наклони", reps: "8" },
+    { img: "pig.png", habitat: "домашно", food: ["grain.png", "grass.png", "mix.png"], benefit: ["ride.png"], act: "Завърти се бавно в кръг", reps: "5" },
+    { img: "turkey.png", habitat: "домашно", food: ["grain.png"], benefit: ["eggs.png", "ride.png"], act: "Изпъни врат нагоре", reps: "6" },
+    { img: "dog.png", habitat: "домашно", food: ["meat.png"], benefit: ["guard.png", "geim.png"], act: "Докосни пръстите на краката", reps: "6" },
+    { img: "cat.png", habitat: "домашно", food: ["meat.png", "mix.png"], benefit: ["geim.png"], act: "Изпъни гърба като коте", reps: "7" },
+    { img: "bee.png", habitat: "диво", food: ["grass.png"], benefit: ["honey.png"], act: "Рисувай осморки с ръце", reps: "10" },
+    { img: "bear.png", habitat: "диво", food: ["mix.png", "meat.png"], benefit: [], act: "Разтегни се високо нагоре", reps: "5" },
+    { img: "fox.png", habitat: "диво", food: ["meat.png"], benefit: [], act: "Ходи на пръсти тихо", reps: "10" },
+    { img: "frog.png", habitat: "диво", food: ["mix.png"], benefit: [], act: "Бавно клякане и изправяне", reps: "5" },
+    { img: "stork.png", habitat: "диво", food: ["meat.png"], benefit: [], act: "Застани на един крак", reps: "8" },
+    { img: "owl.png", habitat: "диво", food: ["meat.png"], benefit: [], act: "Завърти главата бавно", reps: "6" },
+    { img: "hedgehog.png", habitat: "диво", food: ["mix.png"], benefit: [], act: "Свий се на кълбо", reps: "5" },
+    { img: "wolf.png", habitat: "диво", food: ["meat.png"], benefit: [], act: "Разтегни се като вълк", reps: "6" },
+    { img: "rabbit.png", habitat: "диво", food: ["grass.png"], benefit: [], act: "Размърдай носле и уши", reps: "10" },
+    { img: "squirrel.png", habitat: "диво", food: ["grain.png"], benefit: [], act: "Движи пръстите бързо", reps: "12" }
+];
+
+// Разбъркване на животните
+animals.sort(() => Math.random() - 0.5);
+
+let current = 0;
+let foundAnswers = [];
+let totalRequired = 0;
+let wrongAttempts = 0;
+
+function init() {
+    foundAnswers = [];
+    wrongAttempts = 0;
+    document.getElementById('win-screen').style.display = 'none';
+    const display = document.getElementById('animal-display');
+    display.style.display = 'flex';
+    display.innerHTML = `<img src="${animals[current].img}" style="max-height: 330px; filter: drop-shadow(0 15px 20px rgba(0,0,0,0.5));">`;
+    
+    const a = animals[current];
+    totalRequired = 1 + a.food.length + a.benefit.length;
+    
+    const dotsContainer = document.getElementById('dots');
+    dotsContainer.innerHTML = '';
+    for(let i = 0; i < totalRequired; i++) {
+        const d = document.createElement('div');
+        d.className = 'dot';
+        d.id = 'dot-' + i;
+        dotsContainer.appendChild(d);
+    }
+    document.querySelectorAll('.btn-img').forEach(b => b.classList.remove('correct', 'error'));
+}
+
+function checkChoice(btn, cat, val) {
+    const a = animals[current];
+    let isCorrect = (cat === 'habitat' && a.habitat === val) || 
+                    (cat === 'food' && a.food.includes(val)) || 
+                    (cat === 'benefit' && a.benefit.includes(val));
+    
+    const answerKey = cat + '-' + val;
+    
+    if (isCorrect && !foundAnswers.includes(answerKey)) {
+        foundAnswers.push(answerKey);
+        document.getElementById('s-correct').play().catch(()=>{});
+        btn.classList.add('correct');
+        document.getElementById('dot-' + (foundAnswers.length - 1)).classList.add('active');
+        
+        if(foundAnswers.length === totalRequired) {
+            setTimeout(showTask, 600);
+        }
+    } else if (!isCorrect) {
+        wrongAttempts++;
+        document.getElementById('s-error').play().catch(()=>{});
+        btn.classList.add('error');
+        setTimeout(() => btn.classList.remove('error'), 400);
+    }
+}
+
+function showTask() {
+    document.getElementById('error-count').innerText = wrongAttempts;
+    const a = animals[current];
+    const display = document.getElementById('animal-display');
+    display.innerHTML = `
+        <div class="back-task">
+            <div style="font-size: 2.2rem; text-transform: uppercase; margin-top: 20px;">${a.act}</div>
+            <div style="font-size: 6rem; line-height: 0.9; color: #f1c40f;">${a.reps}</div>
+            <div style="font-size: 1.8rem; margin-bottom: 40px;">ПЪТИ</div>
+            <button class="ready-btn" onclick="document.getElementById('win-screen').style.display='flex'; document.getElementById('animal-display').style.display='none';">ГОТОВ!</button>
+        </div>`;
+}
+
+function nextAnimal() {
+    current = (current + 1) % animals.length;
+    init();
+}
+
+window.onload = init;
+</script>
+</body>
+</html>
